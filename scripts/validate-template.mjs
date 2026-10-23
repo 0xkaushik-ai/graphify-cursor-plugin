@@ -33,6 +33,12 @@ async function ensureDirectory(targetPath, context) {
       addError(`${context} exists but is not a directory: ${targetPath}`);
       return false;
     }
+    // Reject the directory itself, or any parent inside the repo, being a symlink.
+    const realRelative = path.relative(await fs.realpath(repoRoot), await fs.realpath(targetPath));
+    if (realRelative !== path.relative(repoRoot, targetPath)) {
+      addError(`${context} must not be or sit under a symlink: ${path.relative(repoRoot, targetPath)}`);
+      return false;
+    }
     return true;
   } catch {
     addError(`${context} directory is missing: ${targetPath}`);
